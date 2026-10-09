@@ -107,23 +107,23 @@ const insights = [
 
 
 function generateInsight() {
-
     const container = document.getElementById("aiInsight");
+
+    if (!container) return;
 
     const randomIndex = Math.floor(
         Math.random() * insights.length
     );
 
-    container.innerHTML = `
-
-    // Guardar esta consulta en el historial
+    // Registrar la consulta en el historial
     if (typeof recordMirageActivity === "function") {
         recordMirageActivity("Consulta al asistente MIRAGE AI");
     }
+
+    container.innerHTML = `
         <strong>✦ MIRAGE AI recomienda:</strong><br><br>
         ${insights[randomIndex]}
     `;
-
 }
 
 
