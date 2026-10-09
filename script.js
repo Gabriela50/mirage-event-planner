@@ -72,6 +72,11 @@ function createEvent(event) {
     );
 
 
+    // Guardar el evento creado en el historial
+    if (typeof recordMirageActivity === "function") {
+        recordMirageActivity(`Evento creado: ${name}`);
+    }
+
     closeEventModal();
 
 
@@ -110,6 +115,11 @@ function generateInsight() {
     );
 
     container.innerHTML = `
+
+    // Guardar esta consulta en el historial
+    if (typeof recordMirageActivity === "function") {
+        recordMirageActivity("Consulta al asistente MIRAGE AI");
+    }
         <strong>✦ MIRAGE AI recomienda:</strong><br><br>
         ${insights[randomIndex]}
     `;
