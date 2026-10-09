@@ -1441,3 +1441,82 @@ body.dark-mode .auth-card {
   color: #f4edf7 !important;
   border-color: #403648 !important;
 }
+
+/* MIRAGE - Historial de actividad */
+.history-section {
+  display: none;
+  margin-top: 28px;
+}
+.history-section.history-visible {
+  display: block;
+}
+.history-heading {
+  margin-bottom: 22px;
+}
+.history-heading h2 {
+  margin: 8px 0;
+}
+.history-card {
+  background: #fff;
+  border: 1px solid #eee5f0;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 8px 28px rgba(65, 39, 72, .05);
+}
+.history-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.history-card-header h3 {
+  margin: 0;
+}
+.history-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 0;
+  border-bottom: 1px solid #eee7f0;
+}
+.history-entry:last-child {
+  border-bottom: 0;
+}
+.history-entry-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #f4eaf7;
+  color: #81538c;
+}
+.history-entry-details {
+  flex: 1;
+  min-width: 0;
+}
+.history-entry-details strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.history-entry-details time,
+.history-empty {
+  display: block;
+  margin-top: 5px;
+  color: #837887;
+  font-size: 13px;
+}
+body.dark-mode .history-card {
+  background: #211d28;
+  color: #f4edf7;
+  border-color: #403648;
+}
+body.dark-mode .history-entry {
+  border-color: #403648;
+}
+body.dark-mode .history-entry-icon {
+  background: #302739;
+  color: #e5c5ed;
+}

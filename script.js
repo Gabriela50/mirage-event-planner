@@ -349,3 +349,91 @@ statNumbers.forEach(number => {
 
   applyLanguage();
 })();
+
+/* MIRAGE - Vista y navegación del historial */
+(function initializeMirageHistoryView() {
+  const section = document.getElementById("history");
+  const list = document.getElementById("mirageHistoryList");
+  const refreshButton = document.getElementById("refreshHistory");
+
+  if (!section || !list) return;
+
+  function renderHistory() {
+    let records = [];
+    try {
+      records = JSON.parse(localStorage.getItem("mirage_history")) || [];
+    } catch (error) {
+      records = [];
+    }
+
+    list.replaceChildren();
+
+    if (!records.length) {
+      const empty = document.createElement("p");
+      empty.className = "history-empty";
+      empty.textContent = "Todavía no hay actividades registradas. Inicia sesión y usa MIRAGE para comenzar.";
+      list.appendChild(empty);
+      return;
+    }
+
+    records.forEach(record => {
+      const entry = document.createElement("article");
+      entry.className = "history-entry";
+
+      const icon = document.createElement("div");
+      icon.className = "history-entry-icon";
+      icon.textContent = record.action && record.action.includes("Evento creado") ? "◈" :
+        record.action && record.action.includes("IA") ? "✦" : "◷";
+
+      const details = document.createElement("div");
+      details.className = "history-entry-details";
+
+      const title = document.createElement("strong");
+      title.textContent = record.action || "Actividad";
+
+      const date = document.createElement("time");
+      if (record.date && !Number.isNaN(Date.parse(record.date))) {
+        date.dateTime = record.date;
+        date.textContent = new Date(record.date).toLocaleString(
+          document.documentElement.lang === "en" ? "en-US" : "es-CO",
+          { dateStyle: "medium", timeStyle: "short" }
+        );
+      } else {
+        date.textContent = "Fecha no disponible";
+      }
+
+      details.append(title, date);
+      entry.append(icon, details);
+      list.appendChild(entry);
+    });
+  }
+
+  function showHistory(event) {
+    if (event) event.preventDefault();
+    section.classList.add("history-visible");
+    const dashboard = document.getElementById("dashboard");
+    if (dashboard) dashboard.style.display = "none";
+    document.querySelectorAll(".content-section, .panel, .budget-section").forEach(el => {
+      el.style.display = "none";
+    });
+    document.querySelectorAll(".sidebar-nav a").forEach(link => {
+      link.classList.toggle("active", link.getAttribute("href") === "#history");
+    });
+    renderHistory();
+  }
+
+  const historyLink = document.querySelector('.sidebar-nav a[href="#history"]');
+  if (historyLink) historyLink.addEventListener("click", showHistory);
+  if (refreshButton) refreshButton.addEventListener("click", renderHistory);
+
+  document.querySelectorAll('.sidebar-nav a:not([href="#history"])').forEach(link => {
+    link.addEventListener("click", () => {
+      section.classList.remove("history-visible");
+      const dashboard = document.getElementById("dashboard");
+      if (dashboard) dashboard.style.display = "";
+      document.querySelectorAll(".content-section, .panel, .budget-section").forEach(el => {
+        el.style.display = "";
+      });
+    });
+  });
+})();

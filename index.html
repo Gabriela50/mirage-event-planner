@@ -130,6 +130,11 @@
                 Presupuesto
             </a>
 
+            <a href="#history">
+                <span>◷</span>
+                Historial
+            </a>
+
             <a href="#assistant">
                 <span>✦</span>
                 Asistente IA
@@ -464,6 +469,28 @@
 
         </section>
 
+
+
+        <!-- HISTORIAL DE ACTIVIDAD -->
+        <section class="history-section" id="history">
+            <div class="history-heading">
+                <p class="small-label">MIRAGE WORKSPACE</p>
+                <h2>Historial de actividad</h2>
+                <p>Consulta los últimos movimientos de tu cuenta.</p>
+            </div>
+
+            <div class="history-card">
+                <div class="history-card-header">
+                    <h3>Actividad reciente</h3>
+                    <button type="button" class="text-button" id="refreshHistory">
+                        Actualizar
+                    </button>
+                </div>
+                <div id="mirageHistoryList" aria-live="polite">
+                    <p>El historial aparecerá aquí.</p>
+                </div>
+            </div>
+        </section>
 
     </main>
 
