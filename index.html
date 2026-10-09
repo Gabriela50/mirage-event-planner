@@ -16,6 +16,89 @@
 
 <body>
 
+<!-- Preferencias globales de MIRAGE -->
+<div class="mirage-preferences">
+    <label class="preference-language" for="mirageLanguage">
+        <span aria-hidden="true">文</span>
+        <select id="mirageLanguage" aria-label="Language">
+            <option value="es">ES · Español</option>
+            <option value="en">EN · English</option>
+        </select>
+    </label>
+
+    <button
+        type="button"
+        id="mirageThemeToggle"
+        class="theme-toggle"
+        aria-label="Cambiar tema"
+        title="Cambiar tema"
+    >
+        <span id="mirageThemeIcon" aria-hidden="true">☾</span>
+        <span id="mirageThemeText">Modo oscuro</span>
+    </button>
+</div>
+<!-- Fin preferencias globales -->
+
+
+<!-- MIRAGE: pantalla de acceso -->
+<section class="auth-screen" id="authScreen">
+    <div class="auth-card">
+        <p class="auth-brand">M I R A G E</p>
+        <h1 id="authTitle">Bienvenida a MIRAGE</h1>
+        <p class="auth-description" id="authDescription">
+            Organiza momentos extraordinarios.
+        </p>
+
+        <form class="auth-form" id="authForm">
+            <label>
+                Nombre
+                <input
+                    type="text"
+                    id="authName"
+                    placeholder="Tu nombre"
+                    autocomplete="name"
+                >
+            </label>
+
+            <label>
+                Correo electrónico
+                <input
+                    type="email"
+                    id="authEmail"
+                    placeholder="tu@correo.com"
+                    autocomplete="email"
+                    required
+                >
+            </label>
+
+            <label>
+                Contraseña
+                <input
+                    type="password"
+                    id="authPassword"
+                    placeholder="Mínimo 8 caracteres"
+                    minlength="8"
+                    autocomplete="current-password"
+                    required
+                >
+            </label>
+
+            <p class="auth-message" id="authMessage" role="alert"></p>
+
+            <button class="auth-button" id="authSubmit" type="submit">
+                Iniciar sesión
+            </button>
+        </form>
+
+        <p class="auth-switch">
+            <span id="authSwitchText">¿Aún no tienes cuenta?</span>
+            <button id="authSwitch" type="button">Crear cuenta</button>
+        </p>
+    </div>
+</section>
+<!-- Fin pantalla de acceso -->
+
+
     <!-- SIDEBAR -->
     <aside class="sidebar">
 
@@ -443,7 +526,7 @@
 
     </div>
 
-
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 
 </body>
