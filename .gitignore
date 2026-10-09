@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+*.backup
+.DS_Store
+coverage/
+
+# Archivos privados
+.env
+.env.*
+!.env.example
+
+# Dependencias y compilacion
+node_modules/
+dist/
+
+# Copias de seguridad locales
+*.backup*

@@ -34,57 +34,144 @@ modal.addEventListener("click", function(event) {
    CREAR EVENTO
 ========================= */
 
-function createEvent(event) {
 
+function createEvent(event) {
     event.preventDefault();
 
-    const name = document.getElementById("eventName").value;
-
+    const name = document.getElementById("eventName").value.trim();
     const type = document.getElementById("eventType").value;
-
     const date = document.getElementById("eventDate").value;
 
-
     if (!name || !date) {
-
         alert("Completa la información del evento.");
-
         return;
-
     }
 
+    const newEvent = {
+        id: Date.now(),
+        name,
+        type,
+        date
+    };
 
-    const formattedDate = new Date(date).toLocaleDateString(
-        "es-CO",
-        {
-            day: "numeric",
-            month: "long"
+    try {
+        const savedEvents = JSON.parse(
+            localStorage.getItem("mirage_events") || "[]"
+        );
+
+        if (!Array.isArray(savedEvents)) {
+            throw new Error("El formato de los eventos no es válido.");
         }
-    );
 
+        savedEvents.unshift(newEvent);
 
-    alert(
-        `✦ Evento creado correctamente\n\n` +
-        `${name}\n` +
-        `${type}\n` +
-        `${formattedDate}\n\n` +
-        `MIRAGE comenzará a preparar recomendaciones para tu evento.`
-    );
+        localStorage.setItem(
+            "mirage_events",
+            JSON.stringify(savedEvents)
+        );
+    } catch (error) {
+        alert("No se pudo guardar el evento. Inténtalo de nuevo.");
+        console.error("Error al guardar el evento:", error);
+        return;
+    }
 
-
-    // Guardar el evento creado en el historial
     if (typeof recordMirageActivity === "function") {
         recordMirageActivity(`Evento creado: ${name}`);
     }
 
+    renderSavedEvents();
     closeEventModal();
-
-
     document.getElementById("eventName").value = "";
-
     document.getElementById("eventDate").value = "";
 
+    alert(`✦ Evento creado correctamente\n\n${name}\n${type}\n${date}`);
 }
+
+function renderSavedEvents() {
+    const grid = document.querySelector("#events .event-grid");
+    if (!grid) return;
+
+    let savedEvents = [];
+
+    try {
+        savedEvents = JSON.parse(
+            localStorage.getItem("mirage_events") || "[]"
+        );
+
+        if (!Array.isArray(savedEvents)) savedEvents = [];
+    } catch (error) {
+        console.error("Error al leer los eventos:", error);
+        return;
+    }
+
+    // Elimina solo las tarjetas dinámicas; conserva las de ejemplo.
+    grid.querySelectorAll("[data-mirage-saved-event]").forEach(card => {
+        card.remove();
+    });
+
+    savedEvents.forEach(item => {
+        const card = document.createElement("article");
+        card.className = "event-card";
+        card.dataset.mirageSavedEvent = "true";
+
+        const image = document.createElement("div");
+        image.className = "event-image";
+
+        const label = document.createElement("span");
+        label.textContent = item.type;
+        image.appendChild(label);
+
+        const content = document.createElement("div");
+        content.className = "event-content";
+
+        const status = document.createElement("div");
+        status.className = "event-status";
+
+        const dot = document.createElement("span");
+        dot.className = "dot";
+
+        status.append(dot, document.createTextNode(" En planificación"));
+
+        const title = document.createElement("h3");
+        title.textContent = item.name;
+
+        const eventDate = document.createElement("p");
+        const parsedDate = new Date(`${item.date}T12:00:00`);
+
+        eventDate.textContent = Number.isNaN(parsedDate.getTime())
+            ? item.date
+            : parsedDate.toLocaleDateString(
+                document.documentElement.lang === "en" ? "en-US" : "es-CO",
+                { day: "numeric", month: "long", year: "numeric" }
+            );
+
+        const footer = document.createElement("div");
+        footer.className = "event-footer";
+
+        const description = document.createElement("span");
+        description.textContent = "Nuevo evento";
+
+        const progressValue = document.createElement("strong");
+        progressValue.textContent = "0%";
+
+        footer.append(description, progressValue);
+
+        const progress = document.createElement("div");
+        progress.className = "progress";
+
+        const progressBar = document.createElement("div");
+        progressBar.style.width = "0%";
+        progress.appendChild(progressBar);
+
+        content.append(status, title, eventDate, footer, progress);
+        card.append(image, content);
+        grid.prepend(card);
+    });
+}
+
+// Recuperar los eventos guardados cuando se carga la página.
+renderSavedEvents();
+
 
 
 /* =========================
