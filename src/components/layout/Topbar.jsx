@@ -17,6 +17,11 @@ export default function Topbar({ t, language, setLanguage, dark, setDark, onLogo
         <button className="secondary-button text-sm" type="button" onClick={() => setDark(!dark)}>
           {dark ? "☀" : "☾"} <span className="hidden sm:inline">{dark ? t.themeLight : t.themeDark}</span>
         </button>
+
+        <button className="secondary-button text-sm" type="button" onClick={onLogout}>
+          {language === "en" ? "Log out" : "Cerrar sesión"}
+        </button>
+
       </div>
     </header>
   );

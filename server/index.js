@@ -11,7 +11,9 @@ app.use(express.json());
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/events', require('./routes/events'));
+app.use('/api/guests', require('./routes/guests'));
 app.use('/api/budget', require('./routes/budget'));
+app.use('/api/assistant', require('./routes/assistant'));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'MIRAGE API' });

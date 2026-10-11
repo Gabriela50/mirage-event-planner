@@ -34,6 +34,9 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const [recommendation, setRecommendation] = useState("");
+  const [assistantPrompt, setAssistantPrompt] = useState("");
+  const [assistantLoading, setAssistantLoading] = useState(false);
+  const [assistantError, setAssistantError] = useState("");
   const [budgetEventId, setBudgetEventId] = useState("");
   const [budgetItems, setBudgetItems] = useState([]);
   const [budgetForm, setBudgetForm] = useState({
@@ -44,6 +47,15 @@ export default function App() {
   const [budgetLoading, setBudgetLoading] = useState(false);
   const [budgetError, setBudgetError] = useState("");
   const [budgetSaving, setBudgetSaving] = useState(false);
+
+  const [guestEventId, setGuestEventId] = useState("");
+  const [guests, setGuests] = useState([]);
+  const [guestForm, setGuestForm] = useState({ name: "", email: "" });
+  const [guestsLoading, setGuestsLoading] = useState(false);
+  const [guestSaving, setGuestSaving] = useState(false);
+  const [guestError, setGuestError] = useState("");
+  const [guestMessage, setGuestMessage] = useState("");
+
 
 
   const t = translations[language] || translations.es;
@@ -214,6 +226,135 @@ export default function App() {
     }
   }, [events, budgetEventId]);
 
+
+  useEffect(() => {
+    if (!events.length) {
+      setGuestEventId("");
+      setGuests([]);
+      return;
+    }
+
+    const exists = events.some(
+      event => String(event.id) === String(guestEventId)
+    );
+
+    if (!guestEventId || !exists) {
+      setGuestEventId(String(events[0].id));
+    }
+  }, [events, guestEventId]);
+
+  useEffect(() => {
+    if (page !== "guests" || !session?.token || !guestEventId) return;
+
+    let active = true;
+    setGuestsLoading(true);
+    setGuestError("");
+
+    apiRequest(`/guests/events/${guestEventId}`, { token: session.token })
+      .then(result => {
+        if (active) setGuests(result.guests || []);
+      })
+      .catch(error => {
+        if (active) setGuestError(error.message || "No se pudieron cargar los invitados.");
+      })
+      .finally(() => {
+        if (active) setGuestsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [page, session?.token, guestEventId]);
+
+  async function createGuest(event) {
+    event.preventDefault();
+
+    const name = guestForm.name.trim();
+    const email = guestForm.email.trim();
+
+    if (!guestEventId) {
+      setGuestError(language === "en" ? "Create an event first." : "Primero crea un evento.");
+      return;
+    }
+
+    if (!name) {
+      setGuestError(language === "en" ? "Enter the guest's name." : "Escribe el nombre del invitado.");
+      return;
+    }
+
+    setGuestSaving(true);
+    setGuestError("");
+    setGuestMessage("");
+
+    try {
+      const result = await apiRequest(`/guests/events/${guestEventId}`, {
+        method: "POST",
+        token: session.token,
+        body: JSON.stringify({ name, email }),
+      });
+
+      setGuests(current => [result.guest, ...current]);
+      setGuestForm({ name: "", email: "" });
+      setGuestMessage(language === "en" ? "Guest saved successfully." : "Invitado guardado correctamente.");
+      record(language === "en" ? "Added an event guest" : "Agregó un invitado");
+    } catch (error) {
+      setGuestError(error.message || "No se pudo guardar el invitado.");
+    } finally {
+      setGuestSaving(false);
+    }
+  }
+
+  async function updateGuestStatus(guest, status) {
+    setGuestError("");
+    setGuestMessage("");
+
+    try {
+      const result = await apiRequest(
+        `/guests/events/${guestEventId}/${guest.id}`,
+        {
+          method: "PATCH",
+          token: session.token,
+          body: JSON.stringify({ status }),
+        }
+      );
+
+      setGuests(current => current.map(item =>
+        String(item.id) === String(guest.id) ? result.guest : item
+      ));
+      setGuestMessage(language === "en" ? "Attendance updated." : "Asistencia actualizada.");
+    } catch (error) {
+      setGuestError(error.message || "No se pudo actualizar la asistencia.");
+    }
+  }
+
+  async function deleteGuest(guest) {
+    const confirmed = window.confirm(
+      language === "en"
+        ? `Delete guest "${guest.name}"?`
+        : `¿Eliminar al invitado "${guest.name}"?`
+    );
+
+    if (!confirmed) return;
+
+    setGuestError("");
+    setGuestMessage("");
+
+    try {
+      await apiRequest(
+        `/guests/events/${guestEventId}/${guest.id}`,
+        { method: "DELETE", token: session.token }
+      );
+
+      setGuests(current => current.filter(item =>
+        String(item.id) !== String(guest.id)
+      ));
+      setGuestMessage(language === "en" ? "Guest deleted." : "Invitado eliminado.");
+      record(language === "en" ? "Deleted an event guest" : "Eliminó un invitado");
+    } catch (error) {
+      setGuestError(error.message || "No se pudo eliminar el invitado.");
+    }
+  }
+
   useEffect(() => {
     if (page !== "budget" || !session?.token || !budgetEventId) return;
 
@@ -315,10 +456,45 @@ export default function App() {
     }).format(Number(value || 0));
   }
 
-  function generateRecommendation() {
-    const next = recommendations[Math.floor(Math.random() * recommendations.length)];
-    setRecommendation(next);
-    record("Consultó las recomendaciones de MIRAGE");
+  async function generateRecommendation() {
+    const prompt = assistantPrompt.trim();
+
+    if (!prompt) {
+      setAssistantError(
+        language === "en"
+          ? "Describe the event you want to organize."
+          : "Describe el evento que quieres organizar."
+      );
+      return;
+    }
+
+    setAssistantLoading(true);
+    setAssistantError("");
+    setRecommendation("");
+
+    try {
+      const result = await apiRequest("/assistant/recommendation", {
+        method: "POST",
+        token: session.token,
+        body: JSON.stringify({ prompt, language }),
+      });
+
+      setRecommendation(result.recommendation || "");
+      record(
+        language === "en"
+          ? "Generated an AI event recommendation"
+          : "Generó una recomendación de evento con IA"
+      );
+    } catch (error) {
+      setAssistantError(
+        error.message ||
+          (language === "en"
+            ? "Could not generate a recommendation."
+            : "No se pudo generar la recomendación.")
+      );
+    } finally {
+      setAssistantLoading(false);
+    }
   }
 
   function navigate(nextPage) {
@@ -577,21 +753,292 @@ export default function App() {
       );
     }
 
+    if (page === "events") {
+      return (
+        <section>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="muted text-xs uppercase tracking-[.2em]">
+                MIRAGE ✦
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold">
+                {t.events}
+              </h2>
+              <p className="muted mt-2">
+                {language === "en"
+                  ? "Organize and manage your events."
+                  : "Organiza y administra tus eventos."}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={openCreateForm}
+            >
+              + {t.create}
+            </button>
+          </div>
+
+          {apiError && (
+            <p
+              role="alert"
+              className="mb-5 rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-700"
+            >
+              {apiError}
+            </p>
+          )}
+
+          {events.length === 0 ? (
+            <div className="surface p-8 text-center">
+              <div className="brand-mark">✦</div>
+              <p className="muted mt-3">{t.empty}</p>
+              <button
+                type="button"
+                className="primary-button mt-5"
+                onClick={openCreateForm}
+              >
+                {t.create}
+              </button>
+            </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {events.map(event => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  t={t}
+                  onEdit={openEditForm}
+                  onDelete={deleteEvent}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      );
+    }
+
+
     if (page === "guests") {
-      return <section className="surface p-6">
-        <h2 className="text-2xl font-semibold">{t.guests}</h2>
-        <p className="muted mt-3">{t.guestsInfo}</p>
-      </section>;
+      const inputClass = "w-full rounded-xl border px-4 py-3";
+      const inputStyle = {
+        background: "var(--surface)",
+        color: "var(--text)",
+        borderColor: "var(--border, #d1d5db)"
+      };
+
+      return (
+        <section className="surface p-6">
+          <h2 className="text-2xl font-semibold">{t.guests}</h2>
+          <p className="muted mt-2">
+            {language === "en"
+              ? "Manage your guest list and track attendance for each event."
+              : "Administra la lista de invitados y confirma su asistencia a cada evento."}
+          </p>
+
+          {events.length === 0 ? (
+            <p className="muted mt-6">
+              {language === "en" ? "Create an event before adding guests." : "Crea un evento antes de agregar invitados."}
+            </p>
+          ) : (
+            <>
+              <div className="mt-6">
+                <label className="mb-2 block text-sm font-medium" htmlFor="guest-event">
+                  {language === "en" ? "Select event" : "Selecciona un evento"}
+                </label>
+                <select
+                  id="guest-event"
+                  className={inputClass}
+                  style={inputStyle}
+                  value={guestEventId}
+                  onChange={event => setGuestEventId(event.target.value)}
+                >
+                  {events.map(item => (
+                    <option key={item.id} value={String(item.id)}>
+                      {item.title || item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <form onSubmit={createGuest} className="mt-6 grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium" htmlFor="guest-name">
+                    {language === "en" ? "Guest name" : "Nombre del invitado"}
+                  </label>
+                  <input
+                    id="guest-name"
+                    className={inputClass}
+                    style={inputStyle}
+                    value={guestForm.name}
+                    onChange={event => setGuestForm(current => ({ ...current, name: event.target.value }))}
+                    placeholder={language === "en" ? "e.g. Ana Pérez" : "Ej. Ana Pérez"}
+                    maxLength={160}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium" htmlFor="guest-email">
+                    {language === "en" ? "Email (optional)" : "Correo electrónico (opcional)"}
+                  </label>
+                  <input
+                    id="guest-email"
+                    type="email"
+                    className={inputClass}
+                    style={inputStyle}
+                    value={guestForm.email}
+                    onChange={event => setGuestForm(current => ({ ...current, email: event.target.value }))}
+                    placeholder="ana@correo.com"
+                    maxLength={254}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <button className="primary-button" type="submit" disabled={guestSaving}>
+                    {guestSaving
+                      ? (language === "en" ? "Saving..." : "Guardando...")
+                      : (language === "en" ? "Add guest" : "Agregar invitado")}
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {guestError && (
+            <p role="alert" className="mt-4 rounded-xl border border-red-300 p-3 text-sm text-red-700">
+              {guestError}
+            </p>
+          )}
+          {guestMessage && (
+            <p role="status" className="mt-4 rounded-xl p-3 text-sm" style={{ background: "var(--accent-soft)" }}>
+              {guestMessage}
+            </p>
+          )}
+
+          {events.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold">
+                {language === "en" ? "Guest list" : "Lista de invitados"} ({guests.length})
+              </h3>
+
+              {guestsLoading ? (
+                <p className="muted mt-4">{language === "en" ? "Loading guests..." : "Cargando invitados..."}</p>
+              ) : guests.length === 0 ? (
+                <p className="muted mt-4">
+                  {language === "en" ? "No guests added to this event yet." : "Todavía no has agregado invitados a este evento."}
+                </p>
+              ) : (
+                <div className="mt-4 grid gap-3">
+                  {guests.map(guest => (
+                    <article key={guest.id} className="rounded-2xl border p-4" style={{ borderColor: "var(--border, #d1d5db)" }}>
+                      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                        <div className="min-w-0">
+                          <p className="font-semibold">{guest.name}</p>
+                          <p className="muted mt-1 break-all text-sm">{guest.email || (language === "en" ? "No email" : "Sin correo")}</p>
+                          <p className="muted mt-1 text-xs">
+                            {language === "en" ? "Status: " : "Estado: "}
+                            {guest.status}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <select
+                            aria-label={language === "en" ? `Attendance status for ${guest.name}` : `Estado de asistencia de ${guest.name}`}
+                            className="rounded-lg border px-2 py-2 text-sm"
+                            style={inputStyle}
+                            value={guest.status}
+                            onChange={event => updateGuestStatus(guest, event.target.value)}
+                          >
+                            <option value="pendiente">{language === "en" ? "Pending" : "Pendiente"}</option>
+                            <option value="confirmado">{language === "en" ? "Confirmed" : "Confirmado"}</option>
+                            <option value="rechazado">{language === "en" ? "Will not attend" : "No asistirá"}</option>
+                          </select>
+                          <button
+                            type="button"
+                            className="rounded-lg border px-3 py-2 text-sm"
+                            style={{ borderColor: "var(--border, #d1d5db)" }}
+                            onClick={() => deleteGuest(guest)}
+                          >
+                            {language === "en" ? "Delete" : "Eliminar"}
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+      );
     }
 
     if (page === "assistant") {
-      return <section className="surface p-6">
-        <p className="muted text-xs uppercase tracking-[.2em]">MIRAGE ✦</p>
-        <h2 className="mt-2 text-2xl font-semibold">{t.aiTitle}</h2>
-        <p className="muted mt-3">{t.aiInfo}</p>
-        <button className="primary-button mt-5" onClick={generateRecommendation}>{t.getIdea}</button>
-        {recommendation && <p className="mt-5 rounded-xl p-4" style={{ background: "var(--accent-soft)" }}>{recommendation}</p>}
-      </section>;
+      return (
+        <section className="surface p-6">
+          <p className="muted text-xs uppercase tracking-[.2em]">MIRAGE ✦ AI</p>
+          <h2 className="mt-2 text-2xl font-semibold">{t.aiTitle}</h2>
+          <p className="muted mt-3">
+            {language === "en"
+              ? "Describe your event, number of guests and budget. Gemini will help you plan it."
+              : "Describe tu evento, la cantidad de invitados y tu presupuesto. Gemini te ayudará a organizarlo."}
+          </p>
+
+          <form
+            className="mt-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              generateRecommendation();
+            }}
+          >
+            <label className="mb-2 block text-sm font-medium" htmlFor="assistant-prompt">
+              {language === "en" ? "Tell MIRAGE about your event" : "Cuéntale a MIRAGE sobre tu evento"}
+            </label>
+            <textarea
+              id="assistant-prompt"
+              rows={5}
+              maxLength={2000}
+              required
+              value={assistantPrompt}
+              onChange={(event) => setAssistantPrompt(event.target.value)}
+              placeholder={language === "en"
+                ? "Example: Plan a birthday for 20 guests with a COP 500,000 budget. Suggest food, decoration and a schedule."
+                : "Ejemplo: Organiza un cumpleaños para 20 personas con $500.000 COP. Sugiere comida, decoración y cronograma."}
+              className="w-full rounded-xl border p-3"
+              style={{
+                background: "var(--surface, transparent)",
+                color: "var(--text, inherit)",
+                borderColor: "var(--border, #d1d5db)",
+              }}
+            />
+            <p className="muted mt-1 text-xs">{assistantPrompt.length}/2000</p>
+
+            {assistantError && (
+              <p className="mt-3 text-sm" role="alert" style={{ color: "var(--danger, #dc2626)" }}>
+                {assistantError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="primary-button mt-5"
+              disabled={assistantLoading}
+            >
+              {assistantLoading
+                ? (language === "en" ? "Generating..." : "Generando...")
+                : (language === "en" ? "Generate AI recommendation" : "Generar recomendación con IA")}
+            </button>
+          </form>
+
+          {recommendation && (
+            <div
+              className="mt-5 whitespace-pre-wrap rounded-xl p-4"
+              style={{ background: "var(--accent-soft)" }}
+              aria-live="polite"
+            >
+              {recommendation}
+            </div>
+          )}
+        </section>
+      );
     }
 
     return (
