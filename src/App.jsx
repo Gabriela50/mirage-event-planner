@@ -506,7 +506,7 @@ export default function App() {
   function renderContent() {
     if (page === "history") {
       return (
-        <section>
+        <section className="mirage-history-page">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-semibold">{t.history}</h2>
             <button className="secondary-button" onClick={() => setHistory(getHistory())}>{t.refresh}</button>
@@ -756,7 +756,7 @@ export default function App() {
 
     if (page === "events") {
       return (
-        <section>
+        <section className="mirage-events-page">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="muted text-xs uppercase tracking-[.2em]">
