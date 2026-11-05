@@ -81,7 +81,7 @@ export default function Showcase({ language }) {
         <article className="founders-group-card">
           <div className="founders-group-photo">
             <img
-              src="/images/fundadores-mirage.jpg"
+              src="/images/gaby-y-alva.png"
               alt="Álvaro Benítez y Gabriela Benítez, fundadores de MIRAGE"
               onError={(event) => {
                 event.currentTarget.style.display = "none";
