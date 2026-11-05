@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AuthScreen from "./components/AuthScreen";
+import Showcase from "./components/dashboard/Showcase";
 import Sidebar from "./components/layout/Sidebar";
 import Topbar from "./components/layout/Topbar";
 import EventCard from "./components/events/EventCard";
@@ -1043,6 +1044,8 @@ export default function App() {
 
     return (
       <>
+        <Showcase language={language} />
+
         <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <div className="surface stat-card">
             <p className="muted text-sm">{t.total}</p>
