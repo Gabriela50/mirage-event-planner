@@ -979,8 +979,8 @@ export default function App() {
           <h2 className="mt-2 text-2xl font-semibold">{t.aiTitle}</h2>
           <p className="muted mt-3">
             {language === "en"
-              ? "Describe your event, number of guests and budget. Gemini will help you plan it."
-              : "Describe tu evento, la cantidad de invitados y tu presupuesto. Gemini te ayudará a organizarlo."}
+              ? "Describe your event, the number of guests and your budget. Get a personalized plan for your celebration."
+              : "Describe tu evento, cuéntanos cuántas personas asistirán y cuál es tu presupuesto. MIRAGE creará una propuesta para ti."}
           </p>
 
           <form

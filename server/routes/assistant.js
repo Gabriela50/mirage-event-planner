@@ -40,13 +40,14 @@ router.post('/recommendation', authenticate, async (req, res) => {
 
   try {
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-goog-api-key': process.env.GEMINI_API_KEY,
         },
+        signal: AbortSignal.timeout(25000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [
@@ -66,7 +67,7 @@ router.post('/recommendation', authenticate, async (req, res) => {
           ],
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 8192,
+            maxOutputTokens: 2048,
           },
         }),
       }
