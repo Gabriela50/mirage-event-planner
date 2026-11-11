@@ -1,18 +1,16 @@
 {
   "name": "mirage-event-planner",
   "version": "1.0.0",
-  "main": "auth.js",
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
+  "main": "electron/main.cjs",
   "scripts": {
     "test": "vitest run",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server/index.js",
-    "server:dev": "nodemon server/index.js"
+    "server:dev": "nodemon server/index.js",
+    "desktop:dir": "npm run build && electron-builder --mac dir --x64",
+    "desktop:pack": "npm run build && electron-builder --mac dmg --x64"
   },
   "keywords": [],
   "author": "",
@@ -31,9 +29,30 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^22.3.27",
+    "electron-builder": "^24.13.3",
     "nodemon": "^3.1.14",
     "tailwindcss": "^4.3.3",
     "vite": "^8.3.4",
     "vitest": "^4.1.11"
+  },
+  "build": {
+    "appId": "com.gabriela.mirage.desktop",
+    "productName": "MIRAGE",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity",
+      "artifactName": "MIRAGE-${version}-mac-intel.${ext}"
+    },
+    "directories": {
+      "output": "release"
+    }
   }
 }
