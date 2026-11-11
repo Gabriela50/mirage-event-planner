@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const pool = require('./db/pool');
 
 const app = express();
@@ -43,9 +44,15 @@ app.get('/api/db-check', async (req, res) => {
   }
 });
 
+app.use(express.static(path.join(__dirname, "../dist")));
+app.use((req, res, next) => {
+  if (req.method !== "GET" || req.path.startsWith("/api")) return next();
+  res.sendFile(path.join(__dirname, "../dist/index.html"));
+});
+
 const port = Number(process.env.PORT || 3001);
 
-const server = app.listen(port, () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`MIRAGE API disponible en http://localhost:${port}`);
 });
 

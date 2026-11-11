@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 
-const pool = new Pool({
+const pool = new Pool(process.env.DATABASE_URL ? { connectionString: process.env.DATABASE_URL } : {
   host: process.env.PGHOST || '/tmp',
   port: Number(process.env.PGPORT || 5432),
   database: process.env.PGDATABASE || 'mirage_db',
