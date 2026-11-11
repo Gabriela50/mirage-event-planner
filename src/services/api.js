@@ -1,4 +1,4 @@
-const API_URL = "http" + "://" + "localhost:3001/api";
+const API_URL = window.location.protocol === "file:" ? "http://localhost:3001/api" : (import.meta.env.VITE_API_URL || "/api");
 
 export async function apiRequest(path, { token, ...options } = {}) {
   const response = await fetch(`${API_URL}${path}`, {
