@@ -10,7 +10,9 @@
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js",
     "desktop:dir": "npm run build && electron-builder --mac dir --x64",
-    "desktop:pack": "npm run build && electron-builder --mac dmg --x64"
+    "desktop:pack": "npm run build && electron-builder --mac dmg --x64",
+    "start": "node server/index.js",
+    "db:migrate": "node server/db/migrate.js"
   },
   "keywords": [],
   "author": "",
