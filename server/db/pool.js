@@ -6,6 +6,7 @@ const pool = new Pool(process.env.DATABASE_URL ? { connectionString: process.env
   port: Number(process.env.PGPORT || 5432),
   database: process.env.PGDATABASE || 'mirage_db',
   user: process.env.PGUSER || 'Macbook',
+  password: process.env.PGPASSWORD || undefined,
 });
 
 pool.on('error', (error) => {
